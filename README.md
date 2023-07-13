@@ -79,7 +79,10 @@ extension Maybe {
         }
     }
 }
-infix operator >>= { associativity left }
+
+precedencegroup ApplicativePrecedence { associativity: left }
+
+infix operator >>= : ApplicativePrecedence
 func >>=<T, U>(a: Maybe<T>, f: T -> Maybe<U>) -> Maybe<U> {
     a.flatMap(f)
 }
