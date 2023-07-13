@@ -10,8 +10,8 @@ In this post I will try to provide proof of concept of Functor/Applicatives/Mona
 We all know the Optional Type (the ? mark) in Swift. We can define our option type named `Maybe` using enum.
 ```swift
 enum Maybe<T> {
-	case Just(T)
-	case Nothing
+    case Just(T)
+    case Nothing
 }
 ```
 Simple enough! A `Maybe` type is a "box" which can contains the value or ... nothing
@@ -25,12 +25,12 @@ The interesting part come from here: we can define a `fmap` function which takes
 How does `fmap` look like? Well, its implement is not that hard
 ```swift
 extension Maybe {
-	func fmap<U>(_ f: (T) -> U) -> Maybe<U> {
-		switch self {
-			case .Just(let x): return .Just(f(x))
-			case .Nothing: return .Nothing
-		}
-	}
+    func fmap<U>(_ f: (T) -> U) -> Maybe<U> {
+        switch self {
+            case .Just(let x): return .Just(f(x))
+            case .Nothing: return .Nothing
+        }
+    }
 }
 ```
 
@@ -48,12 +48,12 @@ Applicatives is a type which can define the function `apply` that
 I will define an `apply` function for `Maybe`
 ```swift
 extension Maybe {
-	func apply<U>(_ f: Maybe<(T) -> U>) -> Maybe<U> {
-		switch f {
-			case .Just(let JustF): return self.fmap(JustF)
-			case .Nothing: return .Nothing
-		}
-	}
+    func apply<U>(_ f: Maybe<(T) -> U>) -> Maybe<U> {
+        switch f {
+            case .Just(let JustF): return self.fmap(JustF)
+            case .Nothing: return .Nothing
+        }
+    }
 }
 ```
 That is it! Our `Maybe` now is both **Functor** and **Applicatives**.
@@ -72,23 +72,23 @@ That is it! Our `Maybe` now is both **Functor** and **Applicatives**.
 Let's Swift! Here is our `flatMap` and bind operator `>>=`
 ```swift
 extension Maybe {
-	func flatMap<U>(_ f: (T) -> Maybe<U>) -> Maybe<U> {
-		switch self {
-			case .Just(let x): return f(x)
-			case .Nothing: return .Nothing
-		}
-	}
+    func flatMap<U>(_ f: (T) -> Maybe<U>) -> Maybe<U> {
+        switch self {
+            case .Just(let x): return f(x)
+            case .Nothing: return .Nothing
+        }
+    }
 }
 infix operator >>= { associativity left }
 func >>=<T, U>(a: Maybe<T>, f: T -> Maybe<U>) -> Maybe<U> {
-	a.flatMap(f)
+    a.flatMap(f)
 }
 ```
 
 Suppose that we already have a `half` function that return an `Maybe` type
 ```swift
 func half(a: Int) -> Maybe<Int> {
-	a % 2 == 0 ? Maybe.Just(a / 2) : Maybe.Nothing
+    a % 2 == 0 ? Maybe.Just(a / 2) : Maybe.Nothing
 }
 ```
 Then with the `>>=` operator you can chain `Maybe` like:
@@ -109,16 +109,16 @@ class Reader<E, A> {
     let g: (E) -> A
     
     init(g: (E) -> A) {
-		self.g = g
-	}
+        self.g = g
+    }
     
     func apply(_ e: E) -> A {
-		g(e)
-	}
+        g(e)
+    }
     
     func map<B>(_ f: A -> B) -> Reader<E, B> {
-		Reader<E, B>{ e in f(self.g(e)) }
-	}
+        Reader<E, B>{ e in f(self.g(e)) }
+    }
 	
     func flatMap<B>(_ f: A -> Reader<E, B>) -> Reader<E, B> {
 		Reader<E, B>{ e in f(self.g(e)).g(e) }
@@ -136,7 +136,7 @@ func >>=<E, A, B>(a: Reader<E, A>, f: A -> Reader<E, B>) -> Reader<E, B> {
 }
 
 func half(i: Float ) -> Reader<Float , Float> {
-	Reader { _ in i/2 }
+    Reader { _ in i/2 }
 }
 let f = Reader{ $0 } >>= half >>= half >>= half
 f.apply(20) // 2.5
@@ -149,33 +149,32 @@ Reader monad take `g` function in `init` time. By switching (or *injecting*) thi
 This is our model:
 ```swift
 struct User {
-	var name: String
-	var age: Int
+    var name: String
+    var age: Int
 }
 
 struct DB {
+    var path: String
+    
+    func findUser(_ userName: String) -> User {
+        // DB Select operation
+        User(name: userName, age: 29)
+    }
 
-	var path: String
-
-	func findUser(_ userName: String) -> User {
-		// DB Select operation
-		User(name: userName, age: 29)
-	}
-
-	func updateUser(_ u: User) -> Void {
-		// DB Update operation
-		print(u.name + " in: " + path)
-	}
+    func updateUser(_ u: User) -> Void {
+        // DB Update operation
+        print(u.name + " in: " + path)
+    }
 }
 ```
 and usage:
 ```swift
 let dbPath = "path_to_db"
 func update(userName: String, newName: String) {
-	let db = DB(path: dbPath)
-	var user = db.findUser(userName)
-	user.name = newName
-	db.updateUser(user)
+    let db = DB(path: dbPath)
+    var user = db.findUser(userName)
+    user.name = newName
+    db.updateUser(user)
 }
 update(userName: "dummy_id", newName: "Thor")
 // Thor in: path_to_db
@@ -185,15 +184,15 @@ In real life `DB` may be compicated and seperated as a whole infrastructure laye
 The problem is `update` function now holding a reference to `dbPath`, which I want to switch during test or runtime. I will rewrite the `update` function to return only a `Reader`
 ```swift
 struct Environment {
-	var path: String
+    var path: String
 }
 func updateF(userName: String, newName: String) -> Reader<Environment, Void> {
-	Reader<Environment, Void> { env in
-		let db = DB(path: env.path)
-		var user = db.findUser(userName)
-		user.name = newName
-		db.updateUser(user)
-	}
+    Reader<Environment, Void> { env in
+        let db = DB(path: env.path)
+        var user = db.findUser(userName)
+        user.name = newName
+        db.updateUser(user)
+    }
 }
 ```
 then call `Reader.apply` later base on what passed through Environment variable.
@@ -212,52 +211,51 @@ updateF(userName: "dummy_id", newName: "Thor").apply(production)
 Scala's `Try` type is a functional approach for error handling. Very likely to Optional (or `Maybe`), `Try` is a "box" that contains value or a *Throwable* if something has gone wrong. `Try` can be a Successful or a Failure.
 ```swift
 enum Try<T> {
+    case Successful(T)
+    case Failure(Error)
 
-	case Successful(T)
-	case Failure(Error)
-
-	init(f: () throws -> T) {
-		do {
-			self = .Successful(try f())
-		} catch {
-			self = .Failure(error)
-		}
-	}
+    init(f: () throws -> T) {
+        do {
+            self = .Successful(try f())
+        } catch {
+            self = .Failure(error)
+        }
+    }
 }
 ```
 To make `Try` a functor/monad, I will add `map` and `flatMap` function
 ```swift
 extension Try {
-	func map<U>(_ f: (T) -> U) -> Try<U> {
-		switch self {
-			case .Successful(let value): return .Successful(f(value))
-			case .Failure(let error): return .Failure(error)
-		}
-	}
+    func map<U>(_ f: (T) -> U) -> Try<U> {
+        switch self {
+            case .Successful(let value): return .Successful(f(value))
+            case .Failure(let error): return .Failure(error)
+        }
+    }
     
-	func flatMap<U>(_ f: (T) -> Try<U>) -> Try<U> {
-		switch self {
-			case .Successful(let value): return f(value)
-			case .Failure(let error): return .Failure(error)
-		}
-	}
+    func flatMap<U>(_ f: (T) -> Try<U>) -> Try<U> {
+        switch self {
+            case .Successful(let value): return f(value)
+            case .Failure(let error): return .Failure(error)
+        }
+    }
 }
 ```
 With an operation which can throws some Error, just wrap them inside a Try and chain(with `map` and `flatMap`) to whenever you want. At every step the result will be a `Try` type. When you want the real value inside that box, just do a pattern matching.
 ```swift
 enum DoomsdayComing: Error {
-	case Boom
-	case Bang
+    case Boom
+    case Bang
 }
 
 let endOfTheWorld = Try {
-	throw DoomsdayComing.Bang
+    throw DoomsdayComing.Bang
 }
 
 let result = Try { 4/2 }.flatMap { _ in endOfTheWorld }
 switch result {
-	case .Successful(let value): print(value)
-	case .Failure(let error): print(error)
+    case .Successful(let value): print(value)
+    case .Failure(let error): print(error)
 }
 // Bang
 ```
