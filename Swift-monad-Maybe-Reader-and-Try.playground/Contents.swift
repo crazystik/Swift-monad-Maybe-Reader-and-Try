@@ -96,12 +96,11 @@ func >>=<E, A, B>(a: Reader<E, A>, f: @escaping (A) -> Reader<E, B>) -> Reader<E
 }
 
 func half(i: Float) -> Reader<Float, Float> {
-    Reader { $0/2 }
+    Reader { _ in i/2 }
 }
 
-var f = Reader { $0 } >>= half //>>= half >>= half
+var f = Reader { $0 } >>= half >>= half >>= half
 f.apply(20) // 2.5
-f.apply(20)
 
 // Sample
 struct User {
@@ -123,7 +122,7 @@ struct DB {
 }
 
 let dbPath = "path_to_db"
-func update(userName: String, newName: String) -> Void {
+func update(userName: String, newName: String) {
     let db = DB(path: dbPath)
     var user = db.findUser(userName)
     user.name = newName
