@@ -115,6 +115,7 @@ struct DB {
         // DB Select operation
         User(name: userName, age: 29)
     }
+    
     func updateUser(_ u: User) -> Void {
         // DB Update operation
         print(u.name + " in: " + path)
@@ -134,8 +135,9 @@ update(userName: "dummy_id", newName: "Thor")
 struct Environment {
     var path: String
 }
+
 func updateF(userName: String, newName: String) -> Reader<Environment, Void> {
-    return Reader<Environment, Void>{ env in
+    Reader<Environment, Void> { env in
         let db = DB(path: env.path)
         var user = db.findUser(userName)
         user.name = newName

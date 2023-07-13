@@ -188,7 +188,7 @@ struct Environment {
 	var path: String
 }
 func updateF(userName: String, newName: String) -> Reader<Environment, Void> {
-	return Reader<Environment, Void>{ env in
+	Reader<Environment, Void> { env in
 		let db = DB(path: env.path)
 		var user = db.findUser(userName)
 		user.name = newName
