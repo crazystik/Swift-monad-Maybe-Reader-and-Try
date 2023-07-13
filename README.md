@@ -106,17 +106,17 @@ Now our `Maybe` is **Functor**, **Applicatives** and also **Monad** as well.
 In this section I will introduce minimal version for one of three useful Monads: the Reader Monad
 ```swift
 class Reader<E, A> {
-	let g: (E) -> A
+    let g: (E) -> A
     
-	init(g: (E) -> A) {
+    init(g: (E) -> A) {
 		self.g = g
 	}
     
-	func apply(_ e: E) -> A {
+    func apply(_ e: E) -> A {
 		g(e)
 	}
     
-	func map<B>(_ f: A -> B) -> Reader<E, B> {
+    func map<B>(_ f: A -> B) -> Reader<E, B> {
 		Reader<E, B>{ e in f(self.g(e)) }
 	}
 	
