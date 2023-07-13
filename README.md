@@ -124,8 +124,8 @@ class Reader<E, A> {
     }
 	
     func flatMap<B>(_ f: A -> Reader<E, B>) -> Reader<E, B> {
-		Reader<E, B>{ e in f(self.g(e)).g(e) }
-	}
+        Reader<E, B>{ e in f(self.g(e)).g(e) }
+    }
 }
 ```
 
